@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('custo_fixos', function (Blueprint $table) {
+        Schema::create('categorias', function (Blueprint $table) {
             $table->id();
-            $table->string('descricao');
-            $table->decimal('valor', 10, 2);
-            $table->date('data');
-            $table->timestamps();
+            $table->string('nome')->unique();
+            $table->enum('tipo', ['gasto_fixo', 'gasto_variavel', 'receita']);
+            $table->timestamps(); 
         });
     }
 
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('custo_fixos');
+        Schema::dropIfExists('categorias');
     }
 };
