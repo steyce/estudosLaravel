@@ -7,60 +7,120 @@ use Illuminate\Http\Request;
 
 class LancamentoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $lancamentos = Lancamento::all();
-        return view('lancamentos.index', compact('lancamentos'));
+    
+    public function index(Request $request)
+{
+    $query = Lancamento::query();
+
+    $mes = $request->input('mes');
+    $ano = $request->input('ano');
+
+    if ($mes) {
+        $query->whereMonth('data', $mes);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    if ($ano) {
+        $query->whereYear('data', $ano);
+    }
+
+    $lancamentos = $query->get();
+
+    $totalReceitas = Lancamento::whereHas('categoria', function ($q) {
+        $q->where('tipo', 'receita');
+    });
+
+    if ($mes) {
+        $totalReceitas->whereMonth('data', $mes);
+    }
+
+    if ($ano) {
+        $totalReceitas->whereYear('data', $ano);
+    }
+
+    $totalReceitas = $totalReceitas->sum('valor');
+
+    $totalGastos = Lancamento::whereHas('categoria', function ($q) {
+        $q->whereIn('tipo', ['gasto_fixo', 'gasto_variavel']);
+    });
+
+    if ($mes) {
+        $totalGastos->whereMonth('data', $mes);
+    }
+
+    if ($ano) {
+        $totalGastos->whereYear('data', $ano);
+    }
+
+    $totalGastos = $totalGastos->sum('valor');
+
+    $saldoFinal = $totalReceitas - $totalGastos;
+
+    return view('lancamentos.index', compact('lancamentos', 'totalReceitas', 'totalGastos', 'saldoFinal'));
+}
+
     public function create()
-    {
-        // Precisaremos buscar as categorias para o formulário de criação
-        return view('lancamentos.create');
-    }
+{
+    $categorias = \App\Models\Categoria::all(); // Busca todas as categorias
+    return view('lancamentos.create', compact('categorias')); // Passa as categorias para a view
+}
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
-    {
-        // Lógica para salvar o novo lançamento (vamos implementar depois)
-    }
+{
+    // Validação dos dados do formulário
+    $request->validate([
+        'data' => 'required|date',
+        'descricao' => 'required|max:255',
+        'valor' => 'required|numeric',
+        'categoria_id' => 'required|exists:categorias,id',
+    ]);
 
-    /**
-     * Display the specified resource.
-     */
+    // Cria uma nova instância do model Lancamento com os dados do formulário
+    $lancamento = new Lancamento();
+    $lancamento->data = $request->input('data');
+    $lancamento->descricao = $request->input('descricao');
+    $lancamento->valor = $request->input('valor');
+    $lancamento->categoria_id = $request->input('categoria_id');
+    $lancamento->save(); // Salva o novo lançamento no banco de dados
+
+    // Redireciona o usuário de volta para a lista de lançamentos com uma mensagem de sucesso
+    return redirect()->route('lancamentos.index')->with('success', 'Lançamento criado com sucesso!');
+}
+
+   
     public function show(Lancamento $lancamento)
     {
         // Lógica para exibir detalhes de um lançamento específico (se necessário)
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Lancamento $lancamento)
     {
-        // Precisaremos buscar as categorias para o formulário de edição
-        return view('lancamentos.edit', compact('lancamento'));
+        $categorias = \App\Models\Categoria::all();
+        return view('lancamentos.edit', compact('lancamento', 'categorias'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+   
     public function update(Request $request, Lancamento $lancamento)
     {
-        // Lógica para atualizar o lançamento (vamos implementar depois)
+        // Validação dos dados do formulário
+        $request->validate([
+            'data' => 'required|date',
+            'descricao' => 'required|max:255',
+            'valor' => 'required|numeric',
+            'categoria_id' => 'required|exists:categorias,id',
+        ]);
+    
+        // Atualiza os dados do lançamento com os dados do formulário
+        $lancamento->data = $request->input('data');
+        $lancamento->descricao = $request->input('descricao');
+        $lancamento->valor = $request->input('valor');
+        $lancamento->categoria_id = $request->input('categoria_id');
+        $lancamento->save(); // Salva as alterações no banco de dados
+    
+        // Redireciona o usuário de volta para a lista de lançamentos com uma mensagem de sucesso
+        return redirect()->route('lancamentos.index')->with('success', 'Lançamento atualizado com sucesso!');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    
     public function destroy(Lancamento $lancamento)
     {
         $lancamento->delete();

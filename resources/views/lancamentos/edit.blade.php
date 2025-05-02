@@ -16,33 +16,6 @@
         </div>
     @endif
 
-    <div class="card mb-3">
-        <div class="card-body">
-            <form action="{{ route('lancamentos.index') }}" method="GET" class="form-inline">
-                <div class="form-group mr-2">
-                    <label for="mes" class="mr-1">Mês:</label>
-                    <select class="form-control" id="mes" name="mes">
-                        <option value="">Todos</option>
-                        @for ($i = 1; $i <= 12; $i++)
-                            <option value="{{ $i }}" {{ request('mes') == $i ? 'selected' : '' }}>{{ \Carbon\Carbon::create(null, $i)->format('F') }}</option>
-                        @endfor
-                    </select>
-                </div>
-                <div class="form-group mr-2">
-                    <label for="ano" class="mr-1">Ano:</label>
-                    <select class="form-control" id="ano" name="ano">
-                        <option value="">Todos</option>
-                        @for ($i = date('Y'); $i >= 2020; $i--)
-                            <option value="{{ $i }}" {{ request('ano') == $i ? 'selected' : '' }}>{{ $i }}</option>
-                        @endfor
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary">Filtrar</button>
-                <a href="{{ route('lancamentos.index') }}" class="btn btn-secondary ml-2">Limpar Filtros</a>
-            </form>
-        </div>
-    </div>
-
     <div class="row mb-3">
         <div class="col-md-4">
             <div class="info-box bg-success">
@@ -118,7 +91,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6">Nenhum lançamento encontrado para o filtro selecionado.</td></tr>
+                        <tr><td colspan="6">Nenhum lançamento cadastrado.</td></tr>
                     @endforelse
                 </tbody>
             </table>

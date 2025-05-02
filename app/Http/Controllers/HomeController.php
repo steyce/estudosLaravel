@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Lancamento;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Support\Renderable;
+
+class HomeController extends Controller
+{
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        // $this->middleware('auth'); // Comente ou remova esta linha se não precisar de autenticação para a dashboard
+    }
+
+    /**
+     * Show the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
+    public function index(): Renderable
+    {
+        // Calcula o saldo atual (soma de receitas subtraindo a soma de gastos)
+        $totalReceitas = Lancamento::whereHas('categoria', function ($query) {
+            $query->where('tipo', 'receita');
+        })->sum('valor');
+
+        $totalGastos = Lancamento::whereHas('categoria', function ($query) {
+            $query->whereIn('tipo', ['gasto_fixo', 'gasto_variavel']);
+        })->sum('valor');
+
+        $saldoAtual = $totalReceitas - $totalGastos;
+
+        // Calcula o total de receitas do mês atual
+        $receitasMesAtual = Lancamento::whereYear('data', now()->year)
+            ->whereMonth('data', now()->month)
+            ->whereHas('categoria', function ($query) {
+                $query->where('tipo', 'receita');
+            })->sum('valor');
+
+        // Calcula o total de gastos do mês atual
+        $gastosMesAtual = Lancamento::whereYear('data', now()->year)
+            ->whereMonth('data', now()->month)
+            ->whereHas('categoria', function ($query) {
+                $query->whereIn('tipo', ['gasto_fixo', 'gasto_variavel']);
+            })->sum('valor');
+
+        // Busca os últimos 5 lançamentos
+        $ultimosLancamentos = Lancamento::orderBy('data', 'desc')->take(5)->get();
+
+        // Retorna a view 'dashboard' passando as variáveis necessárias (sem as do gráfico)
+        return view('dashboard', compact('saldoAtual', 'receitasMesAtual', 'gastosMesAtual', 'ultimosLancamentos'));
+    }
+}

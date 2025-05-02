@@ -3,92 +3,87 @@
 @section('title', 'Dashboard')
 
 @section('content_header')
-    <h1>Seja Bem-Vindx a minha central</h1>
+    <h1>Dashboard</h1>
 @stop
 
 @section('content')
-    <p>Welcome to this beautiful admin panel.</p>
     <div class="row">
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-info">
-            <div class="inner">
-                <h3>R$ 2.000</h3>
-                <p>Custos Fixos</p>
+        <div class="col-md-3">
+            <div class="info-box mb-3 bg-success">
+                <span class="info-box-icon"><i class="fas fa-money-bill-wave"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Saldo Atual</span>
+                    <span class="info-box-number">{{ number_format($saldoAtual ?? 0, 2, ',', '.') }}</span>
+                </div>
             </div>
-            <div class="icon">
-                <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-            <a href="#" class="small-box-footer">Mais info <i class="fas fa-arrow-circle-right"></i></a>
         </div>
-    </div>
-</div>
-
-@section('content')
-<div class="row">
-    <!-- Gastos Fixos -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-danger">
-            <div class="inner">
-                <h3>R$ 1.200</h3>
-                <p>Gastos Fixos</p>
+        <div class="col-md-3">
+            <div class="info-box mb-3 bg-info">
+                <span class="info-box-icon"><i class="fas fa-arrow-up"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Receitas Mês Atual</span>
+                    <span class="info-box-number">{{ number_format($receitasMesAtual ?? 0, 2, ',', '.') }}</span>
+                </div>
             </div>
-            <div class="icon">
-                <i class="fas fa-file-invoice"></i>
-            </div>
-            <a href="#" class="small-box-footer">Ver detalhes <i class="fas fa-arrow-circle-right"></i></a>
         </div>
-    </div>
-
-    <!-- Gastos Variáveis -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-warning">
-            <div class="inner">
-                <h3>R$ 750</h3>
-                <p>Gastos Variáveis</p>
+        <div class="col-md-3">
+            <div class="info-box mb-3 bg-danger">
+                <span class="info-box-icon"><i class="fas fa-arrow-down"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Gastos Mês Atual</span>
+                    <span class="info-box-number">{{ number_format($gastosMesAtual ?? 0, 2, ',', '.') }}</span>
+                </div>
             </div>
-            <div class="icon">
-                <i class="fas fa-random"></i>
+        </div>
+        <div class="col-md-3">
+            <div class="info-box mb-3 bg-warning">
+                <span class="info-box-icon"><i class="fas fa-chart-line"></i></span>
+                <div class="info-box-content">
+                    <span class="info-box-text">Saldo Mês Atual</span>
+                    <span class="info-box-number">{{ number_format(($receitasMesAtual ?? 0) - ($gastosMesAtual ?? 0), 2, ',', '.') }}</span>
+                </div>
             </div>
-            <a href="#" class="small-box-footer">Ver detalhes <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
 
-    <!-- Receitas -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-success">
-            <div class="inner">
-                <h3>R$ 3.000</h3>
-                <p>Receitas</p>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Comparativo Mensal (Últimos 6 Meses)</h3>
+                </div>
+                <div class="card-body">
+                    <p>Gráfico comparativo mensal será implementado aqui.</p>
+                </div>
             </div>
-            <div class="icon">
-                <i class="fas fa-hand-holding-usd"></i>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Últimos Lançamentos</h3>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        @forelse ($ultimosLancamentos as $lancamento)
+                            <li class="list-group-item">
+                                <span class="{{ $lancamento->categoria->tipo == 'receita' ? 'text-success' : 'text-danger' }}">
+                                    {{ number_format($lancamento->valor, 2, ',', '.') }}
+                                </span> -
+                                {{ $lancamento->descricao }} ({{ $lancamento->categoria->nome }})
+                                <small class="float-right">{{ \Carbon\Carbon::parse($lancamento->data)->format('d/m/Y') }}</small>
+                            </li>
+                        @empty
+                            <li class="list-group-item">Nenhum lançamento recente.</li>
+                        @endforelse
+                    </ul>
+                </div>
             </div>
-            <a href="#" class="small-box-footer">Ver detalhes <i class="fas fa-arrow-circle-right"></i></a>
         </div>
     </div>
-
-    <!-- Saldo Final -->
-    <div class="col-lg-3 col-6">
-        <div class="small-box bg-primary">
-            <div class="inner">
-                <h3>R$ 1.050</h3>
-                <p>Saldo Final</p>
-            </div>
-            <div class="icon">
-                <i class="fas fa-wallet"></i>
-            </div>
-            <a href="#" class="small-box-footer">Ver detalhes <i class="fas fa-arrow-circle-right"></i></a>
-        </div>
-    </div>
-</div>
-@endsection
-
 @stop
 
 @section('css')
-    {{-- Add here extra stylesheets --}}
-    {{-- <link rel="stylesheet" href="/css/admin_custom.css"> --}}
+    <link rel="stylesheet" href="/css/admin_custom.css">
 @stop
 
-@section('js')
-    <script> console.log("Hi, I'm using the Laravel-AdminLTE package!"); </script>
+{{-- Seção JS removida --}}
