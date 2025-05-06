@@ -318,6 +318,11 @@ return [
             'icon' => 'fas fa-fw fa-money-bill-wave',
         ],
         [
+            'text' => 'Receitas',
+            'url'  => '/receitas',
+            'icon' => 'fas fa-fw fa-coins text-success',
+        ],
+        [
             'header' => 'RELATÓRIOS',
         ],
         [
@@ -325,7 +330,6 @@ return [
             'url'  => 'relatorios/comparativo-mensal', // Ou use a rota nomeada: route('relatorios.comparativoMensal')
             'icon' => 'fas fa-fw fa-chart-bar',
         ],
-        // ... outros itens de menu
     ],
     /*
     |--------------------------------------------------------------------------

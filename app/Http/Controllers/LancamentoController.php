@@ -10,49 +10,35 @@ class LancamentoController extends Controller
     
     public function index(Request $request)
 {
-    $query = Lancamento::query();
-
     $mes = $request->input('mes');
     $ano = $request->input('ano');
 
+    // Busca os gastos, aplicando os filtros de mês e ano
+    $queryGastos = Lancamento::query()->with('categoria');
     if ($mes) {
-        $query->whereMonth('data', $mes);
+        $queryGastos->whereMonth('data', $mes);
     }
-
     if ($ano) {
-        $query->whereYear('data', $ano);
+        $queryGastos->whereYear('data', $ano);
     }
+    $gastos = $queryGastos->get();
 
-    $lancamentos = $query->get();
-
-    $totalReceitas = Lancamento::whereHas('categoria', function ($q) {
-        $q->where('tipo', 'receita');
-    });
-
+    // Busca as receitas, aplicando os mesmos filtros de mês e ano
+    $queryReceitas = \App\Models\Receita::query()->with('categoria');
     if ($mes) {
-        $totalReceitas->whereMonth('data', $mes);
+        $queryReceitas->whereMonth('data', $mes);
     }
-
     if ($ano) {
-        $totalReceitas->whereYear('data', $ano);
+        $queryReceitas->whereYear('data', $ano);
     }
+    $receitas = $queryReceitas->get();
 
-    $totalReceitas = $totalReceitas->sum('valor');
+    // Combina os gastos e receitas
+    $lancamentos = $gastos->concat($receitas)->sortByDesc('data');
 
-    $totalGastos = Lancamento::whereHas('categoria', function ($q) {
-        $q->whereIn('tipo', ['gasto_fixo', 'gasto_variavel']);
-    });
-
-    if ($mes) {
-        $totalGastos->whereMonth('data', $mes);
-    }
-
-    if ($ano) {
-        $totalGastos->whereYear('data', $ano);
-    }
-
-    $totalGastos = $totalGastos->sum('valor');
-
+    // Recalcula os totais de receitas e gastos com base nos resultados combinados
+    $totalReceitas = $lancamentos->where('categoria.tipo', 'receita')->sum('valor');
+    $totalGastos = $lancamentos->whereIn('categoria.tipo', ['gasto_fixo', 'gasto_variavel'])->sum('valor');
     $saldoFinal = $totalReceitas - $totalGastos;
 
     return view('lancamentos.index', compact('lancamentos', 'totalReceitas', 'totalGastos', 'saldoFinal'));
@@ -64,25 +50,33 @@ class LancamentoController extends Controller
     return view('lancamentos.create', compact('categorias')); // Passa as categorias para a view
 }
 
-    public function store(Request $request)
+public function store(Request $request)
 {
-    // Validação dos dados do formulário
     $request->validate([
-        'data' => 'required|date',
         'descricao' => 'required|max:255',
-        'valor' => 'required|numeric',
+        'valor' => 'required|numeric|min:0.01',
+        'data' => 'required|date',
         'categoria_id' => 'required|exists:categorias,id',
     ]);
 
-    // Cria uma nova instância do model Lancamento com os dados do formulário
-    $lancamento = new Lancamento();
-    $lancamento->data = $request->input('data');
-    $lancamento->descricao = $request->input('descricao');
-    $lancamento->valor = $request->input('valor');
-    $lancamento->categoria_id = $request->input('categoria_id');
-    $lancamento->save(); // Salva o novo lançamento no banco de dados
+    $categoria = \App\Models\Categoria::findOrFail($request->categoria_id);
 
-    // Redireciona o usuário de volta para a lista de lançamentos com uma mensagem de sucesso
+    if ($categoria->tipo === 'receita') {
+        \App\Models\Receita::create([
+            'descricao' => $request->descricao,
+            'valor' => $request->valor,
+            'data' => $request->data,
+            'categoria_id' => $request->categoria_id,
+        ]);
+    } else {
+        Lancamento::create([
+            'descricao' => $request->descricao,
+            'valor' => $request->valor,
+            'data' => $request->data,
+            'categoria_id' => $request->categoria_id,
+        ]);
+    }
+
     return redirect()->route('lancamentos.index')->with('success', 'Lançamento criado com sucesso!');
 }
 

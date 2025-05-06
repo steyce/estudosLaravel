@@ -15,7 +15,7 @@ class HomeController extends Controller
      */
     public function __construct()
     {
-        // $this->middleware('auth'); // Comente ou remova esta linha se não precisar de autenticação para a dashboard
+    
     }
 
     /**
@@ -37,11 +37,9 @@ class HomeController extends Controller
         $saldoAtual = $totalReceitas - $totalGastos;
 
         // Calcula o total de receitas do mês atual
-        $receitasMesAtual = Lancamento::whereYear('data', now()->year)
+        $receitasMesAtual = \App\Models\Receita::whereYear('data', now()->year)
             ->whereMonth('data', now()->month)
-            ->whereHas('categoria', function ($query) {
-                $query->where('tipo', 'receita');
-            })->sum('valor');
+            ->sum('valor');
 
         // Calcula o total de gastos do mês atual
         $gastosMesAtual = Lancamento::whereYear('data', now()->year)
@@ -50,10 +48,13 @@ class HomeController extends Controller
                 $query->whereIn('tipo', ['gasto_fixo', 'gasto_variavel']);
             })->sum('valor');
 
-        // Busca os últimos 5 lançamentos
-        $ultimosLancamentos = Lancamento::orderBy('data', 'desc')->take(5)->get();
+        // Busca os últimos 5 lançamentos (combinando gastos e receitas)
+        $ultimosGastos = Lancamento::orderBy('data', 'desc')->take(5)->get();
+        $ultimasReceitas = \App\Models\Receita::orderBy('data', 'desc')->take(5)->get();
 
-        // Retorna a view 'dashboard' passando as variáveis necessárias (sem as do gráfico)
+        $ultimosLancamentos = $ultimosGastos->concat($ultimasReceitas)->sortByDesc('data')->take(5);
+
+        // Retorna a view 'dashboard' passando as variáveis necessárias
         return view('dashboard', compact('saldoAtual', 'receitasMesAtual', 'gastosMesAtual', 'ultimosLancamentos'));
     }
 }

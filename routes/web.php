@@ -37,9 +37,11 @@ Route::resource('categorias', CategoriaController::class);
 Route::resource('lancamentos', LancamentoController::class);
 
 // Rotas para Receitas (CRUD)
-Route::resource('receitas', ReceitaController::class);
+Route::resource('receitas', App\Http\Controllers\ReceitaController::class);
 
 // Rota para o Relatório Comparativo Mensal
 Route::get('/relatorios/comparativo-mensal', [RelatorioController::class, 'comparativoMensal'])->name('relatorios.comparativoMensal');
 
-// Você pode adicionar outras rotas aqui, se necessário
+Route::get('/lancamentos/{lancamento}/edit', [LancamentoController::class, 'edit'])->name('lancamentos.edit');
+
+Route::get('/receitas/{receita}/edit', [ReceitaController::class, 'edit'])->name('receitas.edit');

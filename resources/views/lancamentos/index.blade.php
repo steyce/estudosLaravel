@@ -82,7 +82,7 @@
                 </a>
             </div>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body"> {{-- Removendo a classe p-0 --}}
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -91,6 +91,8 @@
                         <th>Descrição</th>
                         <th>Valor</th>
                         <th>Categoria</th>
+                        <th>Tipo</th>
+                        <th>Criado Em</th> {{-- Nova coluna --}}
                         <th>Ações</th>
                     </tr>
                 </thead>
@@ -105,20 +107,41 @@
                             </td>
                             <td>{{ $lancamento->categoria->nome }}</td>
                             <td>
-                                <a href="{{ route('lancamentos.edit', $lancamento->id) }}" class="btn btn-sm btn-warning">
-                                    <i class="fas fa-edit"></i> Editar
-                                </a>
-                                <button class="btn btn-sm btn-danger" onclick="if(confirm('Tem certeza que deseja excluir este lançamento?')){ document.getElementById('delete-form-{{ $lancamento->id }}').submit(); }">
-                                    <i class="fas fa-trash"></i> Excluir
-                                </button>
-                                <form id="delete-form-{{ $lancamento->id }}" action="{{ route('lancamentos.destroy', $lancamento->id) }}" method="POST" style="display: none;">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
+                                @if ($lancamento instanceof \App\Models\Lancamento)
+                                    <span class="badge badge-danger">Gasto</span>
+                                @elseif ($lancamento instanceof \App\Models\Receita)
+                                    <span class="badge badge-success">Receita</span>
+                                @endif
+                            </td>
+                            <td>{{ $lancamento->created_at->format('d/m/Y H:i') }}</td> {{-- Exibindo data de criação --}}
+                            <td>
+                                @if ($lancamento instanceof \App\Models\Lancamento)
+                                    <a href="{{ route('lancamentos.edit', $lancamento->id) }}" class="btn btn-sm btn-warning mr-1">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" onclick="if(confirm('Tem certeza que deseja excluir este lançamento?')){ document.getElementById('delete-form-{{ $lancamento->id }}').submit(); }">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                    <form id="delete-form-{{ $lancamento->id }}" action="{{ route('lancamentos.destroy', $lancamento->id) }}" method="POST" style="display: none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                 @elseif ($lancamento instanceof \App\Models\Receita)
+                                    <a href="{{ route('receitas.edit', $lancamento->id) }}" class="btn btn-sm btn-warning mr-1">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <form id="delete-form-receita-{{ $lancamento->id }}" action="{{ route('receitas.destroy', $lancamento->id) }}" method="POST" style="display: none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                    <button class="btn btn-sm btn-danger" onclick="if(confirm('Tem certeza que deseja excluir esta receita?')){ document.getElementById('delete-form-receita-{{ $lancamento->id }}').submit(); }">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6">Nenhum lançamento encontrado para o filtro selecionado.</td></tr>
+                        <tr><td colspan="8">Nenhum lançamento encontrado para o filtro selecionado.</td></tr> {{-- Atualizando colspan --}}
                     @endforelse
                 </tbody>
             </table>
